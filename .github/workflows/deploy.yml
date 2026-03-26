@@ -29,8 +29,8 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+        env:
+          CI: false
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
