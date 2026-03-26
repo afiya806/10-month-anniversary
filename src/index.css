@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+  
+  --color-romantic-pink: #fce4ec;
+  --color-romantic-blush: #f8bbd0;
+  --color-romantic-deep: #f06292;
+  --color-romantic-gold: #d4af37;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-romantic-pink text-gray-800 overflow-x-hidden;
+  }
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Custom scrollbar for horizontal timeline */
+.timeline-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.timeline-scroll::-webkit-scrollbar-track {
+  background: rgba(248, 187, 208, 0.3);
+}
+
+.timeline-scroll::-webkit-scrollbar-thumb {
+  background: #f06292;
+  border-radius: 10px;
+}
+
+.timeline-scroll::-webkit-scrollbar-thumb:hover {
+  background: #ec407a;
+}
