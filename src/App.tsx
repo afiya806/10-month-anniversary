@@ -48,6 +48,41 @@ const MEMORIES = [
 
 // --- Components ---
 
+const CardDecorations = ({ index }: { index: number }) => {
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute"
+          animate={{
+            y: [0, -15, 0],
+            x: [0, i % 2 === 0 ? 10 : -10, 0],
+            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 3 + i,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.5,
+          }}
+          style={{
+            top: i === 0 ? '-20px' : i === 1 ? '40%' : '90%',
+            left: i === 0 ? '10%' : i === 1 ? '-30px' : '80%',
+          }}
+        >
+          {i === 0 ? (
+            <Sparkles size={16} className="text-romantic-deep opacity-40" />
+          ) : (
+            <Heart size={12} fill="#f06292" color="#f06292" className="opacity-30" />
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
 const FloatingHearts = () => {
   const [hearts, setHearts] = useState<{ id: number; left: number; duration: number; size: number }[]>([]);
 
@@ -87,47 +122,183 @@ const MemoryCard = ({ memory, index }: { memory: typeof MEMORIES[0]; index: numb
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="flex-shrink-0 w-56 h-64 mx-4 relative group perspective-1000">
+    <motion.div 
+      initial={{ opacity: 0, y: index % 2 === 0 ? -100 : 100, scale: 0.5, rotate: index % 2 === 0 ? -10 : 10 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ 
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+        delay: index * 0.05 
+      }}
+      className="flex-shrink-0 w-64 h-72 mx-20 relative group perspective-1000"
+    >
       <motion.div
         className="w-full h-full transition-all duration-500 preserve-3d cursor-pointer"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        animate={{ 
+          rotateY: isFlipped ? 180 : 0,
+          y: [0, index % 2 === 0 ? -10 : 10, 0]
+        }}
+        transition={{
+          rotateY: { duration: 0.3, ease: "easeOut" },
+          y: { repeat: Infinity, duration: 4 + (index % 3), ease: "easeInOut" }
+        }}
+        whileHover={{ scale: 1.1, rotateZ: index % 2 === 0 ? 3 : -3, z: 50 }}
         onClick={() => setIsFlipped(!isFlipped)}
       >
+        {/* External Decorations */}
+        <CardDecorations index={index} />
+
         {/* Front Side */}
-        <div className="absolute inset-0 backface-hidden bg-white rounded-xl shadow-lg border border-romantic-blush p-4 flex flex-col justify-between">
-          <div>
-            <span className="text-romantic-deep font-bold text-[9px] uppercase tracking-widest">
-              {memory.date}
-            </span>
-            <div className="w-6 h-0.5 bg-romantic-blush mt-1 mb-2 rounded-full" />
-            <p className="font-serif text-sm text-gray-700 leading-snug">
+        <div className="absolute inset-0 backface-hidden bg-white rounded-2xl shadow-2xl border-2 border-romantic-blush p-5 flex flex-col justify-between overflow-hidden">
+          {/* Decorative Corner Glow */}
+          <div className="absolute -top-6 -right-6 w-16 h-16 bg-romantic-deep/10 blur-xl rounded-full" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-romantic-deep font-black text-[10px] uppercase tracking-widest bg-romantic-pink/50 px-2 py-0.5 rounded-full">
+                {memory.date}
+              </span>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles size={14} className="text-romantic-deep" />
+              </motion.div>
+            </div>
+            <div className="w-10 h-1 bg-gradient-to-r from-romantic-deep to-transparent mb-4 rounded-full" />
+            <p className="font-serif text-base text-gray-800 leading-relaxed font-medium">
               {memory.text}
             </p>
           </div>
-          <div className="flex justify-center">
+          
+          <div className="flex justify-center items-center relative z-10">
             <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ 
+                scale: [1, 1.3, 1],
+                filter: ["drop-shadow(0 0 0px #f06292)", "drop-shadow(0 0 8px #f06292)", "drop-shadow(0 0 0px #f06292)"]
+              }}
               transition={{ repeat: Infinity, duration: 2 }}
             >
-              <Heart size={16} fill="#f8bbd0" color="#f06292" />
+              <Heart size={24} fill="#f06292" color="#f06292" className="opacity-80" />
             </motion.div>
           </div>
-          <div className="absolute bottom-2 right-3 text-[8px] text-romantic-deep/40 italic">
-            Click to see photo
+          
+          <div className="text-center text-[10px] text-romantic-deep font-bold tracking-tighter animate-pulse relative z-10">
+            TAP TO REVEAL PHOTO ✨
           </div>
         </div>
 
-        {/* Back Side (Placeholder Image) */}
-        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-romantic-blush rounded-xl shadow-lg border border-romantic-deep overflow-hidden flex items-center justify-center">
-          <div className="text-center p-2">
-            <div className="w-full aspect-square bg-romantic-pink/50 rounded-lg flex items-center justify-center mb-2 border border-dashed border-romantic-deep/30">
-              <span className="text-romantic-deep font-mono text-[9px]">memory-{index + 1}.jpg</span>
+        {/* Back Side */}
+        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-romantic-blush rounded-2xl shadow-2xl border-2 border-romantic-deep overflow-hidden flex items-center justify-center p-4">
+          <div className="text-center w-full">
+            <div className="w-full aspect-square bg-white/60 rounded-xl flex items-center justify-center mb-3 border-2 border-dashed border-romantic-deep/30 relative overflow-hidden">
+              <motion.div
+                animate={{ 
+                  x: [-100, 100],
+                  y: [-100, 100]
+                }}
+                transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
+                className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent"
+              />
+              <span className="text-romantic-deep font-mono text-[11px] font-bold z-10">memory-{index + 1}.jpg</span>
             </div>
-            <p className="text-romantic-deep font-medium text-[9px]">Our Beautiful Moment</p>
+            <p className="text-romantic-deep font-black text-[12px] uppercase tracking-widest drop-shadow-sm">Our Forever Moment</p>
           </div>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
+  );
+};
+
+const ZigzagLine = ({ count }: { count: number }) => {
+  // Each card is w-64 (256px) + mx-20 (80px each side = 160px) = 416px total per slot
+  const slotWidth = 416;
+  const height = 240;
+  const points = [];
+  
+  for (let i = 0; i < count; i++) {
+    const x = i * slotWidth + slotWidth / 2;
+    const y = i % 2 === 0 ? height * 0.2 : height * 0.8;
+    points.push(`${x},${y}`);
+  }
+  
+  const pathData = `M ${points.join(' L ')}`;
+  
+  return (
+    <svg 
+      className="absolute top-1/2 -translate-y-1/2 left-[15vw] z-0 pointer-events-none" 
+      width={count * slotWidth} 
+      height={height}
+      viewBox={`0 0 ${count * slotWidth} ${height}`}
+    >
+      {/* Main Path */}
+      <motion.path
+        d={pathData}
+        fill="none"
+        stroke="#f8bbd0"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="15, 20"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 0.4 }}
+        transition={{ duration: 4, ease: "easeInOut" }}
+      />
+      
+      {/* Traveling Glow Effect */}
+      <motion.path
+        d={pathData}
+        fill="none"
+        stroke="url(#lineGradient)"
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="50, 400"
+        animate={{ strokeDashoffset: [0, -450] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      />
+
+      <defs>
+        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="transparent" />
+          <stop offset="50%" stopColor="#f06292" />
+          <stop offset="100%" stopColor="transparent" />
+        </linearGradient>
+      </defs>
+
+      {/* Animated nodes */}
+      {points.map((p, i) => {
+        const [x, y] = p.split(',').map(Number);
+        return (
+          <g key={i}>
+            <motion.circle
+              cx={x}
+              cy={y}
+              r="8"
+              fill="#f06292"
+              initial={{ scale: 0 }}
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ 
+                scale: { repeat: Infinity, duration: 2, delay: i * 0.2 },
+                initial: { delay: i * 0.1 }
+              }}
+            />
+            <motion.circle
+              cx={x}
+              cy={y}
+              r="15"
+              stroke="#f06292"
+              strokeWidth="1"
+              fill="none"
+              animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+            />
+          </g>
+        );
+      })}
+    </svg>
   );
 };
 
@@ -138,8 +309,11 @@ export default function App() {
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (page === 'timeline' && scrollRef.current) {
-        e.preventDefault();
-        scrollRef.current.scrollLeft += e.deltaY;
+        // Only horizontal scroll
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          scrollRef.current.scrollLeft += e.deltaY;
+        }
       }
     };
 
@@ -155,7 +329,7 @@ export default function App() {
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-romantic-pink selection:bg-romantic-blush selection:text-romantic-deep">
+    <div className="min-h-screen bg-romantic-pink selection:bg-romantic-blush selection:text-romantic-deep overflow-hidden">
       <FloatingHearts />
 
       <AnimatePresence mode="wait">
@@ -164,88 +338,99 @@ export default function App() {
             key="landing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -50 }}
+            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
             className="relative h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden"
           >
             {/* Hero Background Placeholder */}
             <div className="absolute inset-0 z-[-1]">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-romantic-pink/40 to-romantic-pink z-10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-romantic-pink/60 to-romantic-pink z-10" />
               <div className="w-full h-full bg-romantic-blush flex items-center justify-center">
-                <span className="text-romantic-deep/20 font-mono text-4xl">hero-photo.jpg</span>
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 10, repeat: Infinity }}
+                  className="text-romantic-deep/20 font-mono text-4xl"
+                >
+                  hero-photo.jpg
+                </motion.div>
               </div>
             </div>
 
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 1 }}
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 1, type: "spring" }}
               className="z-20"
             >
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-romantic-deep mb-8 drop-shadow-sm">
-                Happy 10 Months <br /> My Pwincess 🤍
-              </h1>
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <h1 className="font-serif text-5xl md:text-7xl lg:text-9xl text-romantic-deep mb-8 drop-shadow-md leading-tight">
+                  Happy 10 Months <br /> <span className="italic">My Pwincess</span> 🤍
+                </h1>
+              </motion.div>
               
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1, rotate: 2 }}
+                whileTap={{ scale: 0.9 }}
                 animate={{ 
-                  boxShadow: ["0 0 0px rgba(240, 98, 146, 0.4)", "0 0 20px rgba(240, 98, 146, 0.6)", "0 0 0px rgba(240, 98, 146, 0.4)"] 
+                  boxShadow: ["0 0 0px rgba(240, 98, 146, 0.4)", "0 0 30px rgba(240, 98, 146, 0.8)", "0 0 0px rgba(240, 98, 146, 0.4)"] 
                 }}
                 transition={{ 
                   boxShadow: { repeat: Infinity, duration: 2 }
                 }}
                 onClick={() => setPage('timeline')}
-                className="bg-romantic-deep text-white px-8 py-4 rounded-full text-xl font-medium flex items-center gap-2 transition-colors hover:bg-romantic-deep/90 shadow-lg"
+                className="bg-romantic-deep text-white px-10 py-5 rounded-full text-2xl font-bold flex items-center gap-3 transition-all hover:bg-romantic-deep/90 shadow-2xl group"
               >
                 View Our Memories 💫
-                <ChevronRight size={24} />
+                <ChevronRight size={28} className="group-hover:translate-x-1 transition-transform" />
               </motion.button>
             </motion.div>
 
-            <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-4 opacity-40">
-              <Sparkles className="text-romantic-deep animate-pulse" />
-              <Sparkles className="text-romantic-deep animate-pulse delay-75" />
-              <Sparkles className="text-romantic-deep animate-pulse delay-150" />
+            <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-8 opacity-60">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
+                <Sparkles className="text-romantic-deep" size={32} />
+              </motion.div>
+              <motion.div animate={{ rotate: -360 }} transition={{ duration: 12, repeat: Infinity, ease: "linear" }}>
+                <Sparkles className="text-romantic-deep" size={24} />
+              </motion.div>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}>
+                <Sparkles className="text-romantic-deep" size={28} />
+              </motion.div>
             </div>
           </motion.div>
         ) : (
           <motion.div
             key="timeline"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            className="h-screen flex flex-col pt-4 pb-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="h-screen flex flex-col pt-6 pb-6"
           >
-            <div className="px-8 mb-4 flex items-center justify-between">
-              <button
+            <div className="px-12 mb-6 flex items-center justify-between">
+              <motion.button
+                whileHover={{ x: -5 }}
                 onClick={() => setPage('landing')}
-                className="flex items-center gap-2 text-romantic-deep hover:text-romantic-deep/70 transition-colors font-medium text-sm"
+                className="flex items-center gap-2 text-romantic-deep hover:text-romantic-deep/70 transition-colors font-bold text-base bg-white/50 px-4 py-2 rounded-full shadow-sm"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={20} />
                 Back to Home
-              </button>
-              <h2 className="font-serif text-2xl text-romantic-deep">Our Journey Together</h2>
-              <div className="w-24" /> {/* Spacer */}
+              </motion.button>
+              <h2 className="font-serif text-3xl md:text-4xl text-romantic-deep font-bold italic">Our Journey Together</h2>
+              <div className="w-32" /> {/* Spacer */}
             </div>
 
             <div 
               ref={scrollRef}
-              className="flex-1 overflow-x-auto overflow-y-hidden timeline-scroll flex items-center relative px-[10vw]"
+              className="flex-1 overflow-x-auto overflow-y-hidden timeline-scroll flex items-center relative px-[15vw]"
             >
-              {/* Timeline Path */}
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-romantic-blush to-transparent z-0" />
+              <ZigzagLine count={MEMORIES.length} />
               
-              <div className="flex items-center relative z-10">
+              <div className="flex items-center relative z-10 h-full">
                 {MEMORIES.map((memory, index) => (
-                  <div key={index} className="relative flex flex-col items-center">
-                    {/* Connector Dot */}
-                    <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-romantic-deep rounded-full border border-romantic-pink z-20" />
-                    
-                    {/* Vertical Line to Card */}
-                    <div className={`absolute w-0.5 bg-romantic-blush ${index % 2 === 0 ? 'h-4 bottom-1/2' : 'h-4 top-1/2'}`} />
-                    
-                    {/* Card Container */}
-                    <div className={`${index % 2 === 0 ? 'mb-8' : 'mt-8'}`}>
+                  <div key={index} className="relative flex flex-col items-center h-full justify-center">
+                    {/* Card Container with alternating position */}
+                    <div className={`${index % 2 === 0 ? 'mb-40' : 'mt-40'}`}>
                       <MemoryCard memory={memory} index={index} />
                     </div>
                   </div>
@@ -253,9 +438,13 @@ export default function App() {
               </div>
             </div>
 
-            <div className="text-center mt-2 text-romantic-deep/60 text-xs animate-bounce">
-              Scroll right to see more memories →
-            </div>
+            <motion.div 
+              animate={{ x: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-center mt-4 text-romantic-deep font-bold text-sm flex items-center justify-center gap-2"
+            >
+              Scroll to explore our story <ChevronRight size={16} />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
