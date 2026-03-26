@@ -135,13 +135,13 @@ const MemoryCard = ({ memory, index }: { memory: typeof MEMORIES[0]; index: numb
       className="flex-shrink-0 w-64 h-72 mx-20 relative group perspective-1000"
     >
       <motion.div
-        className="w-full h-full transition-all duration-500 preserve-3d cursor-pointer"
+        className="w-full h-full preserve-3d cursor-pointer"
         animate={{ 
           rotateY: isFlipped ? 180 : 0,
           y: [0, index % 2 === 0 ? -10 : 10, 0]
         }}
         transition={{
-          rotateY: { duration: 0.3, ease: "easeOut" },
+          rotateY: { duration: 0.15, ease: "easeInOut" },
           y: { repeat: Infinity, duration: 4 + (index % 3), ease: "easeInOut" }
         }}
         whileHover={{ scale: 1.1, rotateZ: index % 2 === 0 ? 3 : -3, z: 50 }}
