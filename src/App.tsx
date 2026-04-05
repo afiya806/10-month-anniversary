@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { Heart, ChevronRight, ChevronLeft, Sparkles, Plus, Image as ImageIcon } from 'lucide-react';
 
 // --- Data ---
 
@@ -118,8 +118,25 @@ const FloatingHearts = () => {
   );
 };
 
-const MemoryCard = ({ memory, index }: { memory: typeof MEMORIES[0]; index: number }) => {
+const MemoryCard = ({ 
+  memory, 
+  index, 
+  image, 
+  onImageUpload 
+}: { 
+  memory: typeof MEMORIES[0]; 
+  index: number;
+  image?: string;
+  onImageUpload: (file: File) => void;
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onImageUpload(e.target.files[0]);
+    }
+  };
 
   return (
     <motion.div 
@@ -192,19 +209,32 @@ const MemoryCard = ({ memory, index }: { memory: typeof MEMORIES[0]; index: numb
 
         {/* Back Side */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 bg-romantic-blush rounded-2xl shadow-2xl border-2 border-romantic-deep overflow-hidden flex items-center justify-center p-4">
-          <div className="text-center w-full">
-            <div className="w-full aspect-square bg-white/60 rounded-xl flex items-center justify-center mb-3 border-2 border-dashed border-romantic-deep/30 relative overflow-hidden">
-              <motion.div
-                animate={{ 
-                  x: [-100, 100],
-                  y: [-100, 100]
-                }}
-                transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
-                className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent"
+          <div className="text-center w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full bg-white/60 rounded-xl flex items-center justify-center border-2 border-dashed border-romantic-deep/30 relative overflow-hidden">
+              {image ? (
+                <img src={image} alt="Memory" className="w-full h-full object-cover" />
+              ) : (
+                <div 
+                  className="flex flex-col items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  <div className="w-12 h-12 rounded-full bg-romantic-deep/10 flex items-center justify-center text-romantic-deep hover:bg-romantic-deep/20 transition-colors">
+                    <Plus size={24} />
+                  </div>
+                  <span className="text-romantic-deep font-mono text-[10px] font-bold">Add Photo</span>
+                </div>
+              )}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileChange}
               />
-              <span className="text-romantic-deep font-mono text-[11px] font-bold z-10">memory-{index + 1}.jpg</span>
             </div>
-            <p className="text-romantic-deep font-black text-[12px] uppercase tracking-widest drop-shadow-sm">Our Forever Moment</p>
           </div>
         </div>
       </motion.div>
@@ -304,7 +334,41 @@ const ZigzagLine = ({ count }: { count: number }) => {
 
 export default function App() {
   const [page, setPage] = useState<'landing' | 'timeline'>('landing');
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [memoryImages, setMemoryImages] = useState<Record<number, string>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+
+  // Load images from localStorage
+  useEffect(() => {
+    const savedHero = localStorage.getItem('heroImage');
+    const savedMemories = localStorage.getItem('memoryImages');
+    if (savedHero) setHeroImage(savedHero);
+    if (savedMemories) setMemoryImages(JSON.parse(savedMemories));
+  }, []);
+
+  const handleHeroUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setHeroImage(result);
+        localStorage.setItem('heroImage', result);
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  const handleMemoryUpload = (index: number, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      const newImages = { ...memoryImages, [index]: result };
+      setMemoryImages(newImages);
+      localStorage.setItem('memoryImages', JSON.stringify(newImages));
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -329,7 +393,7 @@ export default function App() {
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-romantic-pink selection:bg-romantic-blush selection:text-romantic-deep overflow-hidden">
+    <div className="bg-romantic-pink selection:bg-romantic-blush selection:text-romantic-deep min-h-screen overflow-hidden">
       <FloatingHearts />
 
       <AnimatePresence mode="wait">
@@ -339,34 +403,87 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-            className="relative h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden"
+            className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 py-20 overflow-y-auto"
           >
-            {/* Hero Background Placeholder */}
+            {/* Hero Background Image */}
             <div className="absolute inset-0 z-[-1]">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-romantic-pink/60 to-romantic-pink z-10" />
-              <div className="w-full h-full bg-romantic-blush flex items-center justify-center">
-                <motion.div 
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 10, repeat: Infinity }}
-                  className="text-romantic-deep/20 font-mono text-4xl"
-                >
-                  hero-photo.jpg
-                </motion.div>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-romantic-pink/40 to-romantic-pink z-10" />
+              {heroImage ? (
+                <motion.img 
+                  src={heroImage}
+                  alt="Us"
+                  referrerPolicy="no-referrer"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="w-full h-full object-cover opacity-80"
+                />
+              ) : (
+                <div className="w-full h-full bg-romantic-blush flex items-center justify-center">
+                  <ImageIcon size={100} className="text-romantic-deep/10" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-romantic-blush -z-10" />
             </div>
 
             <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 1, type: "spring" }}
-              className="z-20"
+              transition={{ duration: 1, type: "spring" }}
+              className="z-20 flex flex-col items-center max-w-4xl w-full"
             >
+              {/* Central Framed Photo - Adjusted to fit the whole image */}
+              <motion.div
+                initial={{ rotate: -5, scale: 0.9 }}
+                animate={{ rotate: 2, scale: 1 }}
+                whileHover={{ rotate: 0, scale: 1.05 }}
+                className="mb-10 p-4 bg-white shadow-2xl rounded-sm border border-gray-200 relative group cursor-pointer w-full max-w-[320px] md:max-w-[500px]"
+                onClick={() => heroInputRef.current?.click()}
+              >
+                <div className="w-full h-auto min-h-[200px] overflow-hidden relative bg-romantic-pink/5 flex items-center justify-center">
+                  {heroImage ? (
+                    <img 
+                      src={heroImage} 
+                      alt="Us" 
+                      className="w-full h-auto object-contain max-h-[70vh]"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-4 py-20">
+                      <div className="w-16 h-16 rounded-full bg-romantic-deep/10 flex items-center justify-center text-romantic-deep group-hover:bg-romantic-deep/20 transition-colors">
+                        <Plus size={32} />
+                      </div>
+                      <p className="text-romantic-deep font-serif italic text-lg">Click to add hero photo</p>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    ref={heroInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleHeroUpload}
+                  />
+                  <div className="absolute inset-0 bg-romantic-pink/10 group-hover:bg-transparent transition-colors" />
+                </div>
+                <div className="pt-4 pb-2 text-center">
+                  <p className="font-serif text-romantic-deep text-xl italic">Our Forever 🤍</p>
+                </div>
+                
+                {/* Decorative Sparkle on Frame */}
+                <motion.div 
+                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-4 -right-4 text-romantic-deep"
+                >
+                  <Sparkles size={32} />
+                </motion.div>
+              </motion.div>
+
               <motion.div
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <h1 className="font-serif text-5xl md:text-7xl lg:text-9xl text-romantic-deep mb-8 drop-shadow-md leading-tight">
-                  Happy 10 Months <br /> <span className="italic">My Pwincess</span> 🤍
+                <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-romantic-deep mb-8 drop-shadow-[0_4px_12_rgba(240,98,146,0.5)] leading-tight">
+                  Happy 10 Months <br /> <span className="italic text-romantic-deep/80">My Pwincess</span> 🤍
                 </h1>
               </motion.div>
               
@@ -431,7 +548,12 @@ export default function App() {
                   <div key={index} className="relative flex flex-col items-center h-full justify-center">
                     {/* Card Container with alternating position */}
                     <div className={`${index % 2 === 0 ? 'mb-40' : 'mt-40'}`}>
-                      <MemoryCard memory={memory} index={index} />
+                      <MemoryCard 
+                        memory={memory} 
+                        index={index} 
+                        image={memoryImages[index]}
+                        onImageUpload={(file) => handleMemoryUpload(index, file)}
+                      />
                     </div>
                   </div>
                 ))}
