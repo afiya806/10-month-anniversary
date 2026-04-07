@@ -35,7 +35,7 @@ const MEMORIES = [
   { date: "26th October 2025", text: "Baby's birthday party 🎈" },
   { date: "29th October 2025", text: "My BBG's birthday 🎂💝" },
   { date: "18th November 2025", text: "Tried to do THAT for the first time but failed 😅" },
-  { date: "27th November 2025", text: "Waited with my pwincess 🌟" },
+  { date: "27th November 2025", text: "Saited with my pwincess 🌟" },
   { date: "28th November 2025", text: "Mommy did that for the first time at my house 🏡" },
   { date: "16th January 2026", text: "Tried to do THAT for the second time but failed again 😭" },
   { date: "18th January 2026", text: "WON at IIT Delhi with my pwincess 🏆🎉" },
@@ -118,11 +118,22 @@ const FloatingHearts = () => {
   );
 };
 
+const FUNNY_MESSAGES = [
+  "Sadly no image was taken 📸🚫",
+  "Nothing to see here, just vibes ✨",
+  "We were too busy being cute 💖",
+  "Camera shy moment 🙈",
+  "Memory stored in heart, not on film ❤️",
+  "Error 404: Image not found (but love is) 💘",
+  "Lost in the moment... forgot the camera 🌌",
+  "A moment too precious for pixels 💎",
+];
+
 const MemoryCard = ({ 
   memory, 
   index, 
-  image, 
-  onImageUpload 
+  image,
+  onImageUpload
 }: { 
   memory: typeof MEMORIES[0]; 
   index: number;
@@ -132,6 +143,8 @@ const MemoryCard = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const funnyMessage = FUNNY_MESSAGES[index % FUNNY_MESSAGES.length];
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onImageUpload(e.target.files[0]);
@@ -140,15 +153,9 @@ const MemoryCard = ({
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: index % 2 === 0 ? -100 : 100, scale: 0.5, rotate: index % 2 === 0 ? -10 : 10 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ 
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-        delay: index * 0.05 
-      }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
       className="flex-shrink-0 w-64 h-72 mx-20 relative group perspective-1000"
     >
       <motion.div
@@ -210,21 +217,34 @@ const MemoryCard = ({
         {/* Back Side */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 bg-romantic-blush rounded-2xl shadow-2xl border-2 border-romantic-deep overflow-hidden flex items-center justify-center p-4">
           <div className="text-center w-full h-full flex flex-col items-center justify-center">
-            <div className="w-full h-full bg-white/60 rounded-xl flex items-center justify-center border-2 border-dashed border-romantic-deep/30 relative overflow-hidden">
+            <div className="w-full h-full bg-white/60 rounded-xl flex items-center justify-center border-2 border-dashed border-romantic-deep/30 relative overflow-hidden p-2">
               {image ? (
-                <img src={image} alt="Memory" className="w-full h-full object-cover" />
+                <div className="relative w-full h-full group/img">
+                  <img src={image} alt="Memory" className="w-full h-full object-contain bg-romantic-pink/5" />
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs"
+                  >
+                    Change
+                  </button>
+                </div>
               ) : (
                 <div 
-                  className="flex flex-col items-center gap-2"
+                  className="flex flex-col items-center gap-2 cursor-pointer hover:scale-110 transition-transform"
                   onClick={(e) => {
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-romantic-deep/10 flex items-center justify-center text-romantic-deep hover:bg-romantic-deep/20 transition-colors">
-                    <Plus size={24} />
+                  <div className="w-10 h-10 rounded-full bg-romantic-deep/10 flex items-center justify-center text-romantic-deep">
+                    <Plus size={20} />
                   </div>
-                  <span className="text-romantic-deep font-mono text-[10px] font-bold">Add Photo</span>
+                  <p className="text-romantic-deep font-serif italic text-[10px] leading-tight px-2">
+                    {funnyMessage}
+                  </p>
                 </div>
               )}
               <input 
@@ -274,7 +294,7 @@ const ZigzagLine = ({ count }: { count: number }) => {
         strokeDasharray="15, 20"
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: 1, opacity: 0.4 }}
-        transition={{ duration: 4, ease: "easeInOut" }}
+        transition={{ duration: 1, ease: "easeOut" }}
       />
       
       {/* Traveling Glow Effect */}
@@ -311,8 +331,8 @@ const ZigzagLine = ({ count }: { count: number }) => {
               initial={{ scale: 0 }}
               animate={{ scale: [1, 1.5, 1] }}
               transition={{ 
-                scale: { repeat: Infinity, duration: 2, delay: i * 0.2 },
-                initial: { delay: i * 0.1 }
+                scale: { repeat: Infinity, duration: 2, delay: i * 0.05 },
+                initial: { duration: 0.3 }
               }}
             />
             <motion.circle
@@ -352,8 +372,12 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        setHeroImage(result);
-        localStorage.setItem('heroImage', result);
+        try {
+          localStorage.setItem('heroImage', result);
+          setHeroImage(result);
+        } catch (err) {
+          alert("Storage is full! Please use a smaller image or screenshot.");
+        }
       };
       reader.readAsDataURL(e.target.files[0]);
     }
@@ -364,8 +388,12 @@ export default function App() {
     reader.onload = (event) => {
       const result = event.target?.result as string;
       const newImages = { ...memoryImages, [index]: result };
-      setMemoryImages(newImages);
-      localStorage.setItem('memoryImages', JSON.stringify(newImages));
+      try {
+        localStorage.setItem('memoryImages', JSON.stringify(newImages));
+        setMemoryImages(newImages);
+      } catch (err) {
+        alert("Storage is full! Try using a smaller photo or screenshot for this memory.");
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -436,7 +464,7 @@ export default function App() {
                 initial={{ rotate: -5, scale: 0.9 }}
                 animate={{ rotate: 2, scale: 1 }}
                 whileHover={{ rotate: 0, scale: 1.05 }}
-                className="mb-10 p-4 bg-white shadow-2xl rounded-sm border border-gray-200 relative group cursor-pointer w-full max-w-[320px] md:max-w-[500px]"
+                className="mb-10 p-4 bg-white shadow-2xl rounded-sm border border-gray-200 relative group w-full max-w-[320px] md:max-w-[500px] cursor-pointer"
                 onClick={() => heroInputRef.current?.click()}
               >
                 <div className="w-full h-auto min-h-[200px] overflow-hidden relative bg-romantic-pink/5 flex items-center justify-center">
@@ -449,9 +477,7 @@ export default function App() {
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-4 py-20">
-                      <div className="w-16 h-16 rounded-full bg-romantic-deep/10 flex items-center justify-center text-romantic-deep group-hover:bg-romantic-deep/20 transition-colors">
-                        <Plus size={32} />
-                      </div>
+                      <Plus size={48} className="text-romantic-deep/20" />
                       <p className="text-romantic-deep font-serif italic text-lg">Click to add hero photo</p>
                     </div>
                   )}
@@ -502,6 +528,21 @@ export default function App() {
                 View Our Memories 💫
                 <ChevronRight size={28} className="group-hover:translate-x-1 transition-transform" />
               </motion.button>
+
+              {/* Temporary Export Button */}
+              <button 
+                onClick={() => {
+                  const data = {
+                    heroImage: localStorage.getItem('heroImage'),
+                    memoryImages: localStorage.getItem('memoryImages')
+                  };
+                  navigator.clipboard.writeText(JSON.stringify(data));
+                  alert("Data copied to clipboard! Please paste it in the chat.");
+                }}
+                className="mt-8 text-romantic-deep/40 text-xs hover:text-romantic-deep transition-colors underline"
+              >
+                Finalize & Copy Data (Click this!)
+              </button>
             </motion.div>
 
             <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-8 opacity-60">
